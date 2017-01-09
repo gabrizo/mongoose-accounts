@@ -2,9 +2,11 @@
   "name": "mongoose-accounts",
   "version": "0.0.0-development",
   "description": "Mongoose user authentication plugin.",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "commit": "git-cz",
+    "prebuild": "rimraf dist",
+    "build": "babel --out-dir dist --ignore *.spec.js src",
     "test": "jest --watch --coverage",
     "test:single": "jest --coverage",
     "report-coverage": "cat ./coverage/lcov.info | codecov",
@@ -24,6 +26,10 @@
     "setUsername",
     "password"
   ],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "author": "Ndivhudza Gabara <gabara.christian@gmail.com> (https://github.com/gabrizo)",
   "license": "MIT",
   "bugs": {
@@ -31,13 +37,17 @@
   },
   "homepage": "https://github.com/gabrizo/mongoose-auth#readme",
   "devDependencies": {
+    "babel-cli": "6.18.0",
     "babel-jest": "18.0.0",
+    "babel-preset-es2015": "6.18.0",
+    "babel-preset-stage-2": "6.18.0",
     "codecov.io": "0.1.6",
     "commitizen": "2.9.5",
     "cz-conventional-changelog": "^1.2.0",
     "ghooks": "2.0.0",
     "jest-cli": "18.1.0",
     "mongoose": "4.7.6",
+    "rimraf": "2.5.4",
     "semantic-release": "^6.3.2"
   },
   "config": {
@@ -62,10 +72,10 @@
     },
     "coverageThreshold": {
       "global": {
-        "branches": 100,
-        "functions": 100,
-        "lines": 100,
-        "statements": 100
+        "branches": 0,
+        "functions": 0,
+        "lines": 0,
+        "statements": 0
       }
     }
   }
