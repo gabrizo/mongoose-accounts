@@ -8,7 +8,7 @@
     "prebuild": "rimraf dist",
     "build": "babel --out-dir dist --ignore *.spec.js src",
     "test": "jest --watch --coverage",
-    "test:single": "jest --coverage",
+    "test:single": "jest --coverage --bail --forceExit",
     "report-coverage": "cat ./coverage/lcov.info | codecov",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
@@ -73,10 +73,13 @@
     "coverageThreshold": {
       "global": {
         "branches": 0,
-        "functions": 0,
-        "lines": 0,
-        "statements": 0
+        "functions": 30,
+        "lines": 30,
+        "statements": 30
       }
     }
+  },
+  "dependencies": {
+    "bcrypt": "1.0.2"
   }
 }
