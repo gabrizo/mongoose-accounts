@@ -1,0 +1,43 @@
+{
+  "name": "user-auth-plugin",
+  "version": "0.0.0-development",
+  "description": "Mongoose user authentication plugin.",
+  "main": "src/index.js",
+  "scripts": {
+    "watch:test": "jest --watch --coverage",
+    "test": "jest --coverage",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabrizo/mongoose-auth.git"
+  },
+  "keywords": [
+    "createUser",
+    "loginWithPassword",
+    "addEmail",
+    "mongoose",
+    "plugin",
+    "authentication",
+    "setUsername",
+    "password"
+  ],
+  "author": "Ndivhudza Gabara <gabara.christian@gmail.com> (https://github.com/gabrizo)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gabrizo/mongoose-auth/issues"
+  },
+  "homepage": "https://github.com/gabrizo/mongoose-auth#readme",
+  "devDependencies": {
+    "commitizen": "2.9.5",
+    "cz-conventional-changelog": "^1.2.0",
+    "jest-cli": "18.1.0",
+    "mongoose": "4.7.6",
+    "semantic-release": "^6.3.2"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
