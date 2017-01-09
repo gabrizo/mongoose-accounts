@@ -7,6 +7,7 @@
     "commit": "git-cz",
     "test": "jest --watch --coverage",
     "test:single": "jest --coverage",
+    "report-coverage": "cat ./coverage/lcov.info | codecov",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
@@ -30,6 +31,7 @@
   },
   "homepage": "https://github.com/gabrizo/mongoose-auth#readme",
   "devDependencies": {
+    "codecov.io": "0.1.6",
     "commitizen": "2.9.5",
     "cz-conventional-changelog": "^1.2.0",
     "ghooks": "2.0.0",
