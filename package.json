@@ -32,6 +32,7 @@
   "devDependencies": {
     "commitizen": "2.9.5",
     "cz-conventional-changelog": "^1.2.0",
+    "ghooks": "2.0.0",
     "jest-cli": "18.1.0",
     "mongoose": "4.7.6",
     "semantic-release": "^6.3.2"
@@ -39,6 +40,9 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
+    },
+    "ghooks": {
+      "pre-commit": "npm run test:single"
     }
   }
 }
