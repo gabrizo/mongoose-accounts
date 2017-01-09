@@ -1,5 +1,5 @@
 {
-  "name": "user-auth-plugin",
+  "name": "mongoose-accounts",
   "version": "0.0.0-development",
   "description": "Mongoose user authentication plugin.",
   "main": "src/index.js",
