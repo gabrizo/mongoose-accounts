@@ -10,7 +10,7 @@ notifications:
 node_js:
   - '7'
   - '6'
-  - '4'
+  - '5'
 services:
   - mongodb
 addons:
