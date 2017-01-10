@@ -13,12 +13,6 @@ node_js:
   - '5'
 services:
   - mongodb
-deploy:
-  provider: npm
-  email: gabara.christian@gmail.com
-  api_key: 99c6d855-05d8-4489-bb4f-9dd15f97d5df
-  on:
-    tags: true
 addons:
   apt:
     sources:
