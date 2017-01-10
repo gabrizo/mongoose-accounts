@@ -1,6 +1,6 @@
 {
   "name": "mongoose-accounts",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "Mongoose user authentication plugin.",
   "license": "MIT",
   "main": "dist/index.js",
