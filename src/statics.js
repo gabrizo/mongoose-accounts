@@ -16,7 +16,7 @@ export default function (config) {
         }
 
         if(!username && config.USERNAME_IS_REQUIRED) {
-          return reject(new Error("Username address is required."));
+          return reject(new Error("Username is required."));
         }
 
         if(!email && config.EMAIL_IS_REQUIRED) {

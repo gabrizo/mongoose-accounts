@@ -44,17 +44,19 @@ describe('Accounts', () => {
       })
     });
     it('should reject if email already exists', async () => {
-      const userObj = { username: "xgercx", password: "sekret", email: "bar@example.com" };
+      const userObj = { username: "xxxxAsa", password: "sekret", email: "bar_x@example.com" };
+      const userObj2 = { username: "foxAsa", password: "sekret", email: "bar_x@example.com" };
       const user = await Accounts.createUser(userObj);
-      return Accounts.createUser(userObj)
+      return Accounts.createUser(userObj2)
       .catch((e) => {
         expect(e.message).toEqual("Email is already taken.");
       })
     });
     it('should reject if username already exists', async () => {
-      const user = { password: "sekret", username: "userX", email: "userX@example.com" };
-      const user1 = await Accounts.createUser(user);
-      return Accounts.createUser(user)
+      const userObj = { password: "sekret", username: "userX", email: "userX@example.com" };
+      const userObj2 = { password: "sekret", username: "userX", email: "userX2@example.com" };
+      const user = await Accounts.createUser(userObj);
+      return Accounts.createUser(userObj2)
       .catch((e) => {
         expect(e.message).toEqual("Username is already taken.");
       })
@@ -83,7 +85,7 @@ describe('Accounts', () => {
         password: "userPassword221"
       })
       .catch((e) => {
-        expect(e.message).toEqual("Username address is required.")
+        expect(e.message).toEqual("Username is required.")
       })
     })
   });

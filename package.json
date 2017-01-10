@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gabrizo/mongoose-auth.git"
+    "url": "https://github.com/gabrizo/mongoose-accounts.git"
   },
   "keywords": [
     "createUser",
@@ -34,9 +34,9 @@
   "author": "Ndivhudza Gabara <gabara.christian@gmail.com> (https://github.com/gabrizo)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gabrizo/mongoose-auth/issues"
+    "url": "https://github.com/gabrizo/mongoose-accounts/issues"
   },
-  "homepage": "https://github.com/gabrizo/mongoose-auth#readme",
+  "homepage": "https://github.com/gabrizo/mongoose-accounts#readme",
   "devDependencies": {
     "babel-cli": "6.18.0",
     "babel-jest": "18.0.0",
