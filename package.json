@@ -9,7 +9,7 @@
     "prebuild": "rimraf dist",
     "build": "babel --out-dir dist --ignore *.spec.js src",
     "test": "jest --watch --coverage",
-    "test:single": "jest --coverage --bail --forceExit",
+    "test:single": "jest --coverage --forceExit",
     "report-coverage": "cat ./coverage/lcov.info | codecov",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },

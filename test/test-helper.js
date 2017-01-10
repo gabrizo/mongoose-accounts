@@ -6,7 +6,7 @@ process.env.NODE_ENV = 'test';
 
 const config = {
 db: {
-  test: 'mongodb://localhost/test',
+  test: 'mongodb://localhost/mongoose-accounts',
 },
 connection: null,
 };
@@ -17,7 +17,7 @@ return new Promise((resolve, reject) => {
     return resolve();
   }
 
-  const mongoUri = 'mongodb://localhost/test';
+  const mongoUri = 'mongodb://localhost/mongoose-accounts';
 
   mongoose.Promise = Promise;
 
