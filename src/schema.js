@@ -11,7 +11,6 @@ export default function (config) {
       password: {
         bcrypt: {
           type: String,
-          select: false
         }
       }
     },
@@ -21,7 +20,7 @@ export default function (config) {
         unique: true,
         trim: true,
         lowercase: true,
-        required: config.EMAIL_IS_REQUIRED
+        // required: config.EMAIL_IS_REQUIRED
       },
       verified: {
         type: Boolean,

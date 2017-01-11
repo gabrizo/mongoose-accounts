@@ -49,9 +49,22 @@ export default function (config) {
           if(err) {
             return reject(err)
           }
-          return resolve(doc);
+          return resolve({
+            token: null,
+            userId: doc._id,
+          });
         })
 
+      })
+    },
+    findByUsername: function (username) {
+      const User = this;
+      return new Promise((resolve, reject) => {
+        const query = { username: `${username}` };
+        User.findOne(query, (err, doc) => {
+          if(err) return reject(err);
+          return resolve(doc);
+        })
       })
     }
   }

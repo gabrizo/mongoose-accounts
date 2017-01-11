@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt';
 import _schema from './schema';
 import defaultConfig from './config'
-import userStatics from './statics';
+import getStatics from './statics';
+import getMethods from './methods';
 
 export default function (schema, options) {
   options = Object.assign(defaultConfig, options);
@@ -22,5 +23,6 @@ export default function (schema, options) {
     })
   });
 
-  schema.statics = Object.assign(schema.statics, userStatics(options));
+  schema.statics = Object.assign(schema.statics, getStatics(options));
+  schema.methods = Object.assign(schema.methods, getMethods(options));
 }
