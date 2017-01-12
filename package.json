@@ -1,6 +1,6 @@
 {
   "name": "mongoose-accounts",
-    "version": "0.0.0-development",
+  "version": "0.0.0-development",
   "description": "Mongoose user authentication plugin.",
   "license": "MIT",
   "main": "dist/index.js",
@@ -32,7 +32,6 @@
     "README.md"
   ],
   "author": "Ndivhudza Gabara <gabara.christian@gmail.com> (https://github.com/gabrizo)",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/gabrizo/mongoose-accounts/issues"
   },
@@ -81,6 +80,7 @@
     }
   },
   "dependencies": {
-    "bcrypt": "1.0.2"
+    "bcrypt": "1.0.2",
+    "jsonwebtoken": "7.2.1"
   }
 }

@@ -11,6 +11,7 @@ export default function (config) {
       password: {
         bcrypt: {
           type: String,
+          select: false,
         }
       }
     },
@@ -27,5 +28,5 @@ export default function (config) {
         default: false
       }
     }]
-  };
+  }
 }

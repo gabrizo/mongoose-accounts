@@ -1,6 +1,8 @@
+const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
+
 export default function (config) {
   return {
-    createUser: function(options) {
+    createUser: function(options, autoLogin = config.AUTO_LOGIN) {
       const User = this;
       return new Promise((resolve, reject) => {
         if(typeof options !== "object") {
@@ -44,17 +46,17 @@ export default function (config) {
         if(password) {
           user.services.password = { bcrypt:  password };
         }
-
-        User.create(user, (err, doc) => {
-          if(err) {
-            return reject(err)
+        User.create(user)
+        .then(({_id}) => {
+          if(autoLogin) {
+            return User.findOne({ _id }).exec().then((user) => {
+              return user.generateAuthToken().then((res) => {
+                return resolve(res);
+              })
+            })
           }
-          return resolve({
-            token: null,
-            userId: doc._id,
-          });
+          return resolve({ userId: _id });
         })
-
       })
     },
     findByUsername: function (username) {
@@ -66,6 +68,36 @@ export default function (config) {
           return resolve(doc);
         })
       })
-    }
+    },
+    loginWithPassword: function(selector, password) {
+      const User = this;
+      return new Promise((resolve, reject) => {
+        if(!selector) {
+          return reject(new Error('User must be set.'));
+        }
+
+        if(!password) {
+          return reject(new Error('Password must be set.'));
+        }
+
+        if (typeof selector === "string" ) {
+          if (selector.indexOf("@") === -1) {
+            selector = { username: selector }
+          } else {
+            selector = { "emails.address": selector }
+          }
+        }
+
+        User.findOne(selector).select(SELECT_HIDDEN_FIELDS).exec().then((user) => {
+          if(!user) { return reject(new Error('User not found.'))}
+          user.comparePassword(password).then((isMatch) => {
+            if(isMatch) {
+              return user.generateAuthToken();
+            }
+            return reject(new Error('Incorrect password.'));
+          })
+        })
+      })
+    },
   }
 }

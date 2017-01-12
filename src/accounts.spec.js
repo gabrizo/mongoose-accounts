@@ -8,26 +8,23 @@ mongoose.Promise = global.Promise;
 
 const UserSchema = new Schema({
   mobile: String
+}, {
+  timestamps: true
 });
 
 UserSchema.plugin(AccountPlugin, {
   EMAIL_IS_REQUIRED: true,
   USERNAME_IS_REQUIRED: true,
+  AUTO_LOGIN: true
 });
 
 const Accounts = mongoose.model("User", UserSchema);
-const testUser = {
-  username: "gcontra",
-  email: "gcontra@example.com",
-  password: "password@123"
-};
 
 describe('Accounts', () => {
-
   beforeEach(() => {
     setupTest();
+    // myCreateUser();
   })
-
   it('should hash password before save', () => {
     const user = new Accounts({ username: "user1", "services.password.bcrypt": "password"});
     user.save((err, doc) => {
@@ -45,7 +42,7 @@ describe('Accounts', () => {
         })
       });
       it('should only accept an object as args', () => {
-        return Accounts.createUser("foo@example.com")
+        return Accounts.createUser("foo_bar@example.com")
         .catch((e) => {
           expect(e.message).toEqual("Expected an object.");
         })
@@ -70,13 +67,22 @@ describe('Accounts', () => {
       });
       it('should create a new user', () => {
         Accounts.createUser({
-          email: "foo@example.com",
+          email: "foo_jane@example.com",
           username: "foobar",
           password: "password123"
         }).then((result) => {
           expect(result.userId).toBeDefined();
+        })
+      });
+      it('should create a new user and generateAuthToken if AUTO_LOGIN', () => {
+        Accounts.createUser({
+          email: "jane_doe@example.com",
+          username: "jane_doe",
+          password: "password123"
+        }, true).then((result) => {
+          expect(result.userId).toBeDefined();
           expect(result.token).toBeDefined();
-          // expect(result.token).not.toBeNull();
+          expect(result.token).not.toBeNull();
         })
       });
       it('should reject if email is null and EMAIL_IS_REQUIRED is to true', () => {
@@ -98,36 +104,106 @@ describe('Accounts', () => {
         })
       })
     }); //createUser
-    describe('findByUsername', () => {
+    describe('findByUsername',() => {
       it('should return a user', async () => {
-        const newUser = await Accounts.createUser(testUser);
-        const user = await Accounts.findByUsername(testUser.username);
+        const _user = {
+          username: "breezy",
+          email: "breezy@example.com",
+          password: "password"
+        };
+        const newUser = await Accounts.createUser(_user);
+        const user = await Accounts.findByUsername(_user.username);
         expect(newUser.userId).toEqual(user._id);
       });
       it('should return null if the username is not found', async () => {
         const user = await Accounts.findByUsername({ username: "does_not_exit"});
         expect(user).toBeNull();
-      })
-    })
+      });
+    });
+    describe('loginWithPassword', () => {
+      it('should fail user is undefined.', () => {
+        return Accounts.loginWithPassword()
+        .catch((e) => {
+          expect(e.message).toEqual('User must be set.');
+        });
+      });
+      it('should fail if password is not provided', () => {
+        return Accounts.loginWithPassword({email: "s"})
+        .catch((e) => {
+          expect(e.message).toEqual('Password must be set.');
+        });
+      });
+      it('should fail if the user does not exist', () => {
+        return Accounts.loginWithPassword('randomUsername', 'password')
+        .catch((e) => {
+          expect(e.message).toEqual('User not found.');
+        });
+      });
+      it("should fail if the password is in incorrect.",async () => {
+        const _user = {
+          username: "gabara",
+          email: "gabara@example.com",
+          password: "password"
+        }
+        await Accounts.createUser(_user);
+        Accounts.loginWithPassword(_user.email, "randomPassword")
+        .catch((e) => {
+          expect(e.message).toEqual('Incorrect password.');
+        });
+      });
+      it("should authenticate.",async () => {
+        const _user = {
+          username: "gabara2",
+          email: "gabara2@example.com",
+          password: "password"
+        }
+        await Accounts.createUser(_user);
+        Accounts.loginWithPassword(_user.email, _user.password, true)
+        .then((res) => {
+          expect(res.userId).toBeDefined();
+          expect(res.token).toBeDefined();
+        })
+      });
+    });
   }); //Statics
   describe('Methods', () => {
     describe('comparePassword',  async () => {
+      const HIDDEN_FIELDS = '+services.password.bcrypt';
       it("it should return false if the password is incorrect", async () => {
-        await Accounts.createUser(testUser);
-        Accounts.findOne({ username: testUser.username }, async (err, user) => {
+        await Accounts.createUser({username: "user", email: "mw@exma.com", password: 'password'});
+        Accounts.findOne({username: "user"}).select(HIDDEN_FIELDS).exec()
+        .then((user) => {
           user.comparePassword("randomPassword").then((isMatch) => {
             expect(isMatch).toBeFalsy();
           })
         })
       });
       it("it should return true if the password correct", async () => {
-        Accounts.findOne({ username: testUser.username }, async (err, user) => {
-          user.comparePassword(testUser.password).then((isMatch) => {
+        await Accounts.createUser({username: "exists", email: "exists@exma.com", password: 'password'});
+        Accounts.findOne({username: "exists"}).select(HIDDEN_FIELDS).exec()
+        .then((user) => {
+          user.comparePassword("password").then((isMatch) => {
             expect(isMatch).toBeTruthy();
           })
         })
       });
+    }); //comparePassword
+    describe("generateAuthToken", () => {
+      it('should generate a token', async () => {
+        const _user = {
+          username: "usernameXX",
+          password: "MyPassword___XX@12",
+          email: "__email@foobar.net"
+        }
+        await Accounts.createUser(_user);
+        const user =  await Accounts.findByUsername(_user.username);
+        user.generateAuthToken()
+        .then((res) => {
+          expect(res.token).toBeDefined();
+          expect(res.expiresAt).toBeDefined();
+          expect(res.userId).toBeDefined();
+        })
+      })
     })
   });
-
 });
