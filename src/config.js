@@ -5,5 +5,5 @@ export default {
   AUTO_LOGIN: false, //Generate login token after createUser;
   STORE_AUTH_TOKEN: false,
   APP_SECRET: "secr4t",
-  TOKEN_EXPIRES: "1h"
+  loginExpirationInDays: 1
 };

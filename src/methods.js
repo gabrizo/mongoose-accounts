@@ -19,7 +19,8 @@ export default function (config) {
       const user = this;
       const { TOKEN_EXPIRES, APP_SECRET } = config;
       return new Promise((resolve, reject) => {
-        jwt.sign({ userId: user._id }, APP_SECRET, { expiresIn: TOKEN_EXPIRES }, (err, token) => {
+        const expiresIn = `${config.loginExpirationInDays.toString()}d`;
+        jwt.sign({ userId: user._id }, APP_SECRET, { expiresIn }, (err, token) => {
           //Should calculate expiresAt instead of using below code to get expiresAt?
           jwt.verify(token, APP_SECRET, (err, data) => {
             return resolve({
