@@ -1,9 +1,8 @@
 import { setupTest } from '../test/mongoose-connection';
 import { Accounts, createTestUser, removeAllUsers } from '../test/user';
+import { Types } from 'mongoose';
 
 const HIDDEN_FIELDS = '+services.password.bcrypt';
-let testUser;
-
 removeAllUsers();
 createTestUser();
 
@@ -93,6 +92,46 @@ describe('Accounts', () => {
         })
       })
     }); //createUser
+
+    describe('removeEmail', () => {
+      it('should reject is if userId is null', () => {
+        Accounts.removeEmail().catch((e) => expect(e.message).toEqual('userId must be set.'));
+      })
+      it('should reject if email is not provided', () => {
+        Accounts.removeEmail("userId").catch((e) => expect(e.message).toEqual('Email must be set.'));
+      });
+      it('should reject if the user is does not exist', () => {
+        const userId = Types.ObjectId();
+        Accounts.removeEmail(userId, "random@example.com")
+        .catch((e) =>  {
+          expect(e.message).toEqual("User not found.");
+        });
+      });
+      it('should reject is no email is not found.', async () => {
+        const user = await Accounts.findByUsername("gabrizo");
+        Accounts.removeEmail(user._id, "random_remove_email@example.com")
+        .catch((e) => {
+          expect(e.message).toEqual("Email not found.");
+        });
+      });
+      it('should reject if email length is 1', async () => {
+        const user = await Accounts.findByUsername("gabrizo");
+        Accounts.removeEmail(user._id, user.emails[0].address)
+        .catch((e) =>  {
+          expect(e.message).toEqual("Emails needs to be greater than one.")
+        });
+      });
+      it('should remove emails', async () => {
+        const user = await Accounts.findByUsername("gabrizo");
+        const email = "email_to_remove@example.com";
+        await Accounts.addEmail(user._id, email);
+        Accounts.removeEmail(user._id, email)
+        .then((res) =>  {
+          expect(res).toBeTruthy();
+        });
+      });
+    }); //removeEmail
+
     describe('addEmail', () => {
       it('should reject if userId is empty', async () => {
         return Accounts.addEmail()

@@ -1,3 +1,5 @@
+import { find } from 'lodash';
+
 export default function (config) {
   const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
   return {
@@ -116,6 +118,44 @@ export default function (config) {
           if(!user) return reject(new Error("User not found."));
         })
         return resolve(User.update(query, update));
+
+      });
+    },
+    removeEmail: function(userId, address) {
+      const User = this;
+      return new Promise((resolve, reject) => {
+        if(!userId) return reject((new Error("userId must be set.")));
+        if(!address) return reject((new Error("Email must be set.")));
+
+        const emailNotFound = "Email not found.";
+        const query = {_id: userId };
+        const emailQuery = { "emails.address": address };
+        const pull = {
+          $pull: {
+            emails: { address: "address" }
+          }
+        }
+        User.findOne(query).exec().then((user) => {
+          if(!user) return reject(new Error("User not found."));
+          const { emails } = user;
+          if(!emails) return reject(new Error(emailNotFound));
+          const email = find(emails, { address: address } );
+          if(!email) return reject(new Error(emailNotFound));
+          if(emails.length <= 1) return reject(Error("Emails needs to be greater than one."));
+          User.update(query, pull).then((res) => {
+            return resolve(true);
+          })
+          .catch((e) => {
+            return resolve(false);
+          });
+        });
+
+          // User.findOne(emailQuery).exec().then((user) => {
+          //   console.log(user);
+          //   if(!user) return reject(new Error("Email not found."))
+          // });
+
+        // return resolve(User.update(query, pull));
 
       });
     }
