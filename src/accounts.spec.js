@@ -16,6 +16,9 @@ describe('Accounts', () => {
   });
 
   describe('Statics', () => {
+
+
+
     describe('#createUser()', () => {
       it('should reject if username or email is not provided', async () => {
         Accounts.createUser({ password: "password" } )
@@ -167,6 +170,7 @@ describe('Accounts', () => {
         })
       });
     });
+
     describe('findByUsername',() => {
       it('should return a user', async () => {
         const user = await Accounts.findByUsername("gabrizo");
@@ -177,6 +181,7 @@ describe('Accounts', () => {
         expect(user).toBeNull();
       });
     });
+
     describe('loginWithPassword', () => {
       it('should fail user is undefined.', () => {
         return Accounts.loginWithPassword()
@@ -217,7 +222,53 @@ describe('Accounts', () => {
         })
       });
     });
+
+    describe("setUsername", () => {
+      it('should reject if userId is empty', () => {
+        Accounts.setUsername()
+        .catch((e) => {
+          expect(e.message).toEqual('userId must be set.');
+        });
+      });
+      it('should reject if username is empty', () => {
+        const userId = Types.ObjectId()
+        Accounts.setUsername(userId)
+        .catch((e) => {
+          expect(e.message).toEqual('username must be set.');
+        });
+      });
+      it('should reject if user does not exists', () => {
+        const userId = Types.ObjectId();
+        Accounts.setUsername(userId, "newUsername")
+        .catch((e) => {
+          expect(e.message).toEqual('User not found.');
+        });
+      });
+      it('should reject if username is already taken', async () => {
+        const user = await Accounts.findByUsername("gabrizo");
+        const { _id, username } = user;
+        Accounts.setUsername(_id, username)
+        .catch((e) => {
+          expect(e.message).toEqual('Username is already taken.');
+        });
+      });
+      it('should update username', async () => {
+        const _user = {
+          username: "breezy",
+          email: "breezy_@example.com",
+          password: "PAssswprd"
+        };
+        await Accounts.createUser(_user);
+        const user = await Accounts.findByUsername("breezy");
+        const { _id, username } = user;
+        Accounts.setUsername(_id, "new_username1020")
+        .then((res) => {
+          expect(res).toBeTruthy();
+        })
+      });
+    });//setUsername
   }); //Statics
+
   describe('Methods', () => {
     describe('comparePassword',  async () => {
       it("it should return false if the password is incorrect", async () => {

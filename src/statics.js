@@ -149,15 +149,27 @@ export default function (config) {
             return resolve(false);
           });
         });
-
-          // User.findOne(emailQuery).exec().then((user) => {
-          //   console.log(user);
-          //   if(!user) return reject(new Error("Email not found."))
-          // });
-
-        // return resolve(User.update(query, pull));
-
       });
+    },
+    setUsername: function(userId, username) {
+      const User = this;
+      return new Promise((resolve, reject) => {
+        if(!userId) return reject(new Error("userId must be set."));
+        if(!username) return reject(new Error("username must be set."));
+        User.findById(userId).exec().then((user) => {
+          if (!user) return reject(new Error("User not found."));
+          User.findOne({ username }).exec().then((user) => {
+            if(user) return reject(new Error("Username is already taken."));
+            const query = { _id: userId };
+            const set = { $set: { username: username }};
+            User.update(query, set).exec()
+            .then((res) => {
+              if(res.nModified > 0) return resolve(true);
+              return resolve(false);
+            })
+          })
+        })
+      })
     }
   }
 }
