@@ -8,11 +8,10 @@ export default function (config) {
       return new Promise((resolve, reject) => {
         if(user.services.password.bcrypt) {
           bcrypt.compare(givenPassword, user.services.password.bcrypt, (err, isMatch) => {
-            if(err) return reject(err);
-            resolve(isMatch);
+            return resolve(isMatch);
           })
         } else {
-          return reject('Password not set');
+          return reject('Password not set.');
         }
       });
     },
@@ -27,10 +26,10 @@ export default function (config) {
               userId: user._id,
               token,
               expiresAt: data.exp //FORMAT THIS?
-            })
-          })
+            });
+          });
         });
-      })
-    }
+      });
+    },
   }
 }

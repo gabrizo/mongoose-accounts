@@ -21,6 +21,7 @@ export default function (config) {
         unique: true,
         trim: true,
         lowercase: true,
+        index: true
         // required: config.EMAIL_IS_REQUIRED
       },
       verified: {

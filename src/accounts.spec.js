@@ -1,30 +1,13 @@
-import AccountPlugin from './index.js';
-import { setupTest } from '../test/test-helper';
-import mongoose, { Schema } from 'mongoose';
+import { setupTest } from '../test/mongoose-connection';
+import { Accounts, createTestUser, removeAllUsers } from '../test/user';
 
-setupTest();
+const HIDDEN_FIELDS = '+services.password.bcrypt';
+let testUser;
 
-mongoose.Promise = global.Promise;
-
-const UserSchema = new Schema({
-  mobile: String
-}, {
-  timestamps: true
-});
-
-UserSchema.plugin(AccountPlugin, {
-  EMAIL_IS_REQUIRED: true,
-  USERNAME_IS_REQUIRED: true,
-  AUTO_LOGIN: true
-});
-
-const Accounts = mongoose.model("User", UserSchema);
+removeAllUsers();
+createTestUser();
 
 describe('Accounts', () => {
-  beforeEach(() => {
-    setupTest();
-    // myCreateUser();
-  })
   it('should hash password before save', () => {
     const user = new Accounts({ username: "user1", "services.password.bcrypt": "password"});
     user.save((err, doc) => {
@@ -36,7 +19,7 @@ describe('Accounts', () => {
   describe('Statics', () => {
     describe('#createUser()', () => {
       it('should reject if username or email is not provided', async () => {
-        return Accounts.createUser({ password: "password" } )
+        Accounts.createUser({ password: "password" } )
         .catch((e) => {
           expect(e.message).toEqual('Username or email must be set.')
         })
@@ -53,17 +36,15 @@ describe('Accounts', () => {
         const user = await Accounts.createUser(userObj);
         return Accounts.createUser(userObj2)
         .catch((e) => {
-          expect(e.message).toEqual("Email is already taken.");
+          expect(e).toBeDefined();
         })
       });
       it('should reject if username already exists', async () => {
-        const userObj = { password: "sekret", username: "userX", email: "userX@example.com" };
-        const userObj2 = { password: "sekret", username: "userX", email: "userX2@example.com" };
-        const user = await Accounts.createUser(userObj);
-        return Accounts.createUser(userObj2)
+        const userObj = { password: "sekret", username: "gabrizo", email: "user3@example.com" };
+        return Accounts.createUser(userObj)
         .catch((e) => {
-          expect(e.message).toEqual("Username is already taken.");
-        })
+          expect(e).toBeDefined();
+        });
       });
       it('should create a new user', () => {
         Accounts.createUser({
@@ -74,16 +55,24 @@ describe('Accounts', () => {
           expect(result.userId).toBeDefined();
         })
       });
-      it('should create a new user and generateAuthToken if AUTO_LOGIN', () => {
-        Accounts.createUser({
+      it('should create a new user and return auth token if autoLogin is set to true', () => {
+        const user = { email: "john@example.com",username: "john_doe",password: "password123"};
+        Accounts.createUser(user, true).then((result) => {
+          expect(result.userId).toBeDefined();
+          expect(result.token).toBeDefined();
+        })
+      });
+      it('should create a new user and generateAuthToken if AUTO_LOGIN is set to true', () => {
+        const options = {
           email: "jane_doe@example.com",
           username: "jane_doe",
           password: "password123"
-        }, true).then((result) => {
-          expect(result.userId).toBeDefined();
-          expect(result.token).toBeDefined();
-          expect(result.token).not.toBeNull();
-        })
+        };
+        Accounts.createUser(options, true).then((res) => {
+          expect(res.userId).toBeDefined();
+          expect(res.token).toBeDefined();
+          expect(res.token).not.toBeNull();
+        });
       });
       it('should reject if email is null and EMAIL_IS_REQUIRED is to true', () => {
         Accounts.createUser({
@@ -104,16 +93,45 @@ describe('Accounts', () => {
         })
       })
     }); //createUser
+    describe('addEmail', () => {
+      it('should reject if userId is empty', async () => {
+        return Accounts.addEmail()
+        .catch((e) => {
+          expect(e.message).toEqual("userId must be set.");
+        });
+      });
+      it('should reject if newEmail is empty', async () => {
+        return Accounts.addEmail("ObjectId(XXXXX)")
+        .catch((e) => {
+          expect(e.message).toEqual("Email must be set.");
+        });
+      });
+      it('should reject if the userId is not valid', async() => {
+        Accounts.addEmail("XXXXXXXXXXXX", "me_@example.com")
+        .catch((e) => {
+          console.log(e.message);
+          expect(e.message).toEqual("User not found.");
+        })
+      })
+      it('should add a new mail', async () => {
+        const user =  await Accounts.findByUsername("gabrizo");
+        return Accounts.addEmail(user._id, "newEmail@example.com").then((res) => {
+          expect(res).toBeTruthy();
+        });
+      });
+      it('should reject if mail already exists', async () => {
+        const user =  await Accounts.findByUsername("gabrizo");
+        const newEmail = user.emails[0].address;
+        return Accounts.addEmail(user._id, newEmail)
+        .catch((e) => {
+          expect(e).toBeDefined()
+        })
+      });
+    });
     describe('findByUsername',() => {
       it('should return a user', async () => {
-        const _user = {
-          username: "breezy",
-          email: "breezy@example.com",
-          password: "password"
-        };
-        const newUser = await Accounts.createUser(_user);
-        const user = await Accounts.findByUsername(_user.username);
-        expect(newUser.userId).toEqual(user._id);
+        const user = await Accounts.findByUsername("gabrizo");
+        expect(user.username).toEqual("gabrizo");
       });
       it('should return null if the username is not found', async () => {
         const user = await Accounts.findByUsername({ username: "does_not_exit"});
@@ -140,25 +158,20 @@ describe('Accounts', () => {
         });
       });
       it("should fail if the password is in incorrect.",async () => {
-        const _user = {
-          username: "gabara",
-          email: "gabara@example.com",
-          password: "password"
-        }
-        await Accounts.createUser(_user);
-        Accounts.loginWithPassword(_user.email, "randomPassword")
+        Accounts.loginWithPassword("gabrizo", "randomPassword")
         .catch((e) => {
           expect(e.message).toEqual('Incorrect password.');
         });
       });
-      it("should authenticate.",async () => {
-        const _user = {
-          username: "gabara2",
-          email: "gabara2@example.com",
-          password: "password"
-        }
-        await Accounts.createUser(_user);
-        Accounts.loginWithPassword(_user.email, _user.password, true)
+      it("should authenticate with a username.", () => {
+        Accounts.loginWithPassword("gabrizo", 'Password')
+        .then((res) => {
+          expect(res.userId).toBeDefined();
+          expect(res.token).toBeDefined();
+        })
+      });
+      it("should authenticate with an email.", () => {
+        Accounts.loginWithPassword("gabrizo@example.com", 'Password')
         .then((res) => {
           expect(res.userId).toBeDefined();
           expect(res.token).toBeDefined();
@@ -168,10 +181,8 @@ describe('Accounts', () => {
   }); //Statics
   describe('Methods', () => {
     describe('comparePassword',  async () => {
-      const HIDDEN_FIELDS = '+services.password.bcrypt';
       it("it should return false if the password is incorrect", async () => {
-        await Accounts.createUser({username: "user", email: "mw@exma.com", password: 'password'});
-        Accounts.findOne({username: "user"}).select(HIDDEN_FIELDS).exec()
+        Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec()
         .then((user) => {
           user.comparePassword("randomPassword").then((isMatch) => {
             expect(isMatch).toBeFalsy();
@@ -179,10 +190,9 @@ describe('Accounts', () => {
         })
       });
       it("it should return true if the password correct", async () => {
-        await Accounts.createUser({username: "exists", email: "exists@exma.com", password: 'password'});
-        Accounts.findOne({username: "exists"}).select(HIDDEN_FIELDS).exec()
+        Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec()
         .then((user) => {
-          user.comparePassword("password").then((isMatch) => {
+          user.comparePassword("Password").then((isMatch) => {
             expect(isMatch).toBeTruthy();
           })
         })
@@ -190,13 +200,8 @@ describe('Accounts', () => {
     }); //comparePassword
     describe("generateAuthToken", () => {
       it('should generate a token', async () => {
-        const _user = {
-          username: "usernameXX",
-          password: "MyPassword___XX@12",
-          email: "__email@foobar.net"
-        }
-        await Accounts.createUser(_user);
-        const user =  await Accounts.findByUsername(_user.username);
+
+        const user =  await Accounts.findByUsername("gabrizo");
         user.generateAuthToken()
         .then((res) => {
           expect(res.token).toBeDefined();
@@ -204,6 +209,6 @@ describe('Accounts', () => {
           expect(res.userId).toBeDefined();
         })
       })
-    })
+    });
   });
 });

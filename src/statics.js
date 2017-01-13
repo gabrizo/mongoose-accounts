@@ -1,6 +1,5 @@
-const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
-
 export default function (config) {
+  const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
   return {
     createUser: function(options, autoLogin = config.AUTO_LOGIN) {
       const User = this;
@@ -46,17 +45,12 @@ export default function (config) {
         if(password) {
           user.services.password = { bcrypt:  password };
         }
-        User.create(user)
-        .then(({_id}) => {
+        return User.create(user).then((user) => {
           if(autoLogin) {
-            return User.findOne({ _id }).exec().then((user) => {
-              return user.generateAuthToken().then((res) => {
-                return resolve(res);
-              })
-            })
+            return resolve(user.generateAuthToken());
           }
-          return resolve({ userId: _id });
-        })
+          return resolve({ userId: user._id });
+        });
       })
     },
     findByUsername: function (username) {
@@ -91,13 +85,39 @@ export default function (config) {
         User.findOne(selector).select(SELECT_HIDDEN_FIELDS).exec().then((user) => {
           if(!user) { return reject(new Error('User not found.'))}
           user.comparePassword(password).then((isMatch) => {
-            if(isMatch) {
-              return user.generateAuthToken();
-            }
+            if(isMatch) return resolve(user.generateAuthToken());
             return reject(new Error('Incorrect password.'));
-          })
-        })
-      })
+          });
+        });
+      });
     },
+    addEmail: function(userId, newEmail, verified = false) {
+      const User = this;
+      return new Promise((resolve, reject) => {
+        if(!userId) return reject((new Error("userId must be set.")));
+        if(!newEmail) return reject((new Error("Email must be set.")));
+
+        const query = {_id: userId };
+        const emailQuery = { "emails.address": newEmail };
+        const update = {
+          $addToSet: {
+            emails: {
+              address: newEmail,
+              verified: verified
+            }
+          }
+        };
+
+        User.findOne(emailQuery).exec().then((user) => {
+          if(user)  return reject(new Error("Email is already taken."))
+        });
+
+        User.findOne(query).exec().then((user) => {
+          if(!user) return reject(new Error("User not found."));
+        })
+        return resolve(User.update(query, update));
+
+      });
+    }
   }
 }

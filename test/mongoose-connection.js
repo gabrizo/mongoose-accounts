@@ -30,7 +30,8 @@ return new Promise((resolve, reject) => {
   };
 
   mongoose.connect(mongoUri, options);
-
+  mongoose.Promise = global.Promise;
+  
   config.connection = mongoose.connection;
 
   config.connection

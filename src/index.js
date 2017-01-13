@@ -3,13 +3,15 @@ import _schema from './schema';
 import defaultConfig from './config'
 import getStatics from './statics';
 import getMethods from './methods';
+import uniqueValidator from 'mongoose-unique-validator';
 
 export default function (schema, options) {
   options = Object.assign(defaultConfig, options);
   const userSchema = _schema(options);
   schema.add(userSchema);
-
+  schema.plugin(uniqueValidator, { message: '{PATH} is already taken'})
   //Hash the password before saving;
+
   schema.pre('save', function(next) {
     const user = this;
     if(!user.isModified('services.password.bcrypt')) return next();
@@ -22,6 +24,7 @@ export default function (schema, options) {
       })
     })
   });
+
 
   schema.statics = Object.assign(schema.statics, getStatics(options));
   schema.methods = Object.assign(schema.methods, getMethods(options));
