@@ -315,7 +315,7 @@ describe('Accounts', () => {
   }); //Statics
 
   describe('Methods', () => {
-    describe('comparePassword',  async () => {
+    describe('#comparePassword(password)',  async () => {
       it("it should return false if the password is incorrect", async () => {
         return Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec()
         .then((user) => {
@@ -333,7 +333,7 @@ describe('Accounts', () => {
         })
       });
     }); //comparePassword
-    describe("generateAuthToken", () => {
+    describe("#generateAuthToken(email)", () => {
       it('should generate a token', async () => {
 
         const user =  await Accounts.findByUsername("gabrizo");
@@ -344,6 +344,58 @@ describe('Accounts', () => {
           expect(res.userId).toBeDefined();
         })
       })
+    });
+
+    describe("#changePassword(oldPassword, newPassword)", () => {
+      it('should fail if oldPassword is empty', async () => {
+        const user = await Accounts.findByUsername('gabrizo');
+        return user.changePassword()
+        .catch(({message}) => {
+          expect(message).toEqual('oldPassword must be set.');
+        });
+      });
+      it('should fail if newPassword is empty', async () => {
+        const user = await Accounts.findByUsername('gabrizo');
+        return user.changePassword('oldPassword')
+        .catch(({message}) => {
+          expect(message).toEqual('newPassword must be set.');
+        });
+      });
+      it('should fail if oldPassword is not a string', async () => {
+        const user = await Accounts.findByUsername('gabrizo');
+        return user.changePassword(11111, "password")
+        .catch(({message}) => {
+          expect(message).toEqual('oldPassword must be a string.');
+        });
+      });
+      it('should fail if newPassword is not a string', async () => {
+        const user = await Accounts.findByUsername('gabrizo');
+        return user.changePassword('oldPassword', 111111)
+        .catch(({message}) => {
+          expect(message).toEqual('newPassword must be a string.');
+        });
+      });
+      it('should fail is oldPassword and newPassword are the same', async () => {
+        const user = await Accounts.findByUsername('gabrizo');
+        return user.changePassword('Password', 'Password')
+          .catch(({message}) => {
+          expect(message).toEqual('newPassword cannot be the same as oldPassword.');
+        });
+      });
+      it('should fail if oldPassword does not match current db password', async () => {
+        const user = await Accounts.findByUsername('gabrizo');
+        return user.changePassword('__Password', 'password123')
+        .catch(({message}) => {
+          expect(message).toEqual('Incorrect password.');
+        });
+      });
+      it('should change password to newPassword', async () => {
+        const user = await Accounts.findByUsername('gabrizo');
+        return user.changePassword('Password', 'password123')
+        .then((res) => {
+          expect(res).toEqual(true);
+        });
+      });
     });
   });
 });

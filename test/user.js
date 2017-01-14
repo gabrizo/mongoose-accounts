@@ -20,12 +20,14 @@ UserSchema.plugin(AccountsPlugin, {
 export const Accounts = mongoose.model('User', UserSchema);
 
 export async function createTestUser() {
-  const user = await Accounts.createUser({
-    username: "gabrizo",
-    email: "gabrizo@example.com",
-    password: "Password"
+  Accounts.remove().then(async () => {
+    const user = await Accounts.createUser({
+      username: "gabrizo",
+      email: "gabrizo@example.com",
+      password: "Password"
+    });
+    return user;
   });
-  return user;
 }
 
 export async function removeAllUsers() {
