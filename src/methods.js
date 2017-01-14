@@ -1,22 +1,25 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
+//const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
 
 export default function (config) {
   return {
     comparePassword: function (givenPassword){
       return new Promise((resolve, reject) => {
-        this.collection.findOne({_id: this._id}, { 'services.password.bcrypt': 1 })
-        .then((user) => {
-          if(user.services.password.bcrypt) {
-            bcrypt.compare(givenPassword, user.services.password.bcrypt, (err, isMatch) => {
-              return resolve(isMatch);
-            })
-          } else {
-            return reject('Password not set.');
+        if(this.services.password.bcrypt) {
+          return resolve(bcrypt.compareSync(givenPassword, this.services.password.bcrypt));
+        }
+
+        const fields = { username: 1, 'services.password.bcrypt': 1 };
+        this.collection.findOne({_id: this._id}, fields).then((user) => {
+          if(user && user.services && user.services.password && user.services.password.bcrypt) {
+            return resolve(bcrypt.compareSync(givenPassword, user.services.password.bcrypt));
+
           }
-        })
+          return reject(new Error('Password not set.'));
+
+        });
       });
     },
     generateAuthToken: function() {
@@ -53,17 +56,12 @@ export default function (config) {
         if (oldPassword === newPassword) return reject(new Error('newPassword cannot be the same as oldPassword.'));
         user.comparePassword(oldPassword).then((isMatch) => {
           if(!isMatch) return reject(new Error('Incorrect password.'));
-          bcrypt.genSalt(config.bcryptRounds, (err, salt) => {
-            if(err) return next(err);
-            bcrypt.hash(newPassword, salt, (hashErr, hash) => {
-              if(err) return next(hashErr);
-              const update = {
-                $set: { "services.password.bcrypt": hash }
-              };
-              user.update(update).then((res) => {
-                return resolve(!!res.nModified);
-              });
-            });
+          const hash = bcrypt.hashSync(newPassword, config.bcryptRounds);
+          const update = {
+            $set: { "services.password.bcrypt": hash }
+          };
+          user.update(update).then((res) => {
+            return resolve(!!res.nModified);
           });
         });
       });

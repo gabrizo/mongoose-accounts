@@ -1,7 +1,7 @@
 import { find } from 'lodash';
 import Chance from 'chance';
 import {  isEmail } from 'validator';
-
+import bcrypt from 'bcrypt';
 const chance = new Chance();
 
 export default function (config) {
@@ -49,7 +49,7 @@ export default function (config) {
         }
 
         if(password) {
-          user.services.password = { bcrypt:  password };
+          user.services.password = { bcrypt: bcrypt.hashSync(password, config.bcryptRounds)};
         }
         return User.create(user).then((user) => {
           if(autoLogin) {
@@ -88,12 +88,14 @@ export default function (config) {
           }
         }
 
-        User.findOne(selector).select(SELECT_HIDDEN_FIELDS).exec().then((user) => {
+        return User.findOne(selector).select(SELECT_HIDDEN_FIELDS).exec().then((user) => {
           if(!user) { return reject(new Error('User not found.'))}
-          user.comparePassword(password).then((isMatch) => {
+          return user.comparePassword(password).then((isMatch) => {
             if(isMatch) return resolve(user.generateAuthToken());
             return reject(new Error('Incorrect password.'));
-          });
+          }).catch((e) => {
+            return reject(e);
+          })
         });
       });
     },
@@ -152,9 +154,6 @@ export default function (config) {
           if(emails.length <= 1) return reject(Error("Emails needs to be greater than one."));
           User.update(query, pull).then(({nModified}) => {
             return resolve(!!nModified);
-          })
-          .catch((e) => {
-            return resolve(false);
           });
         });
       });
@@ -171,9 +170,8 @@ export default function (config) {
             const query = { _id: userId };
             const set = { $set: { username: username }};
             User.update(query, set).exec()
-            .then((res) => {
-              if(res.nModified > 0) return resolve(true);
-              return resolve(false);
+            .then(({nModified}) => {
+              return resolve(!!nModified);
             });
           });
         });

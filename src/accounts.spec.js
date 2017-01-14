@@ -7,13 +7,13 @@ removeAllUsers();
 createTestUser();
 
 describe('Accounts', () => {
-  it('should hash password before save', () => {
-    const user = new Accounts({ username: "user1", "services.password.bcrypt": "password"});
-    user.save((err, doc) => {
-      expect(doc.services.password.bcrypt).toBeDefined();
-      expect(doc.services.password.bcrypt).not.toBe("password");
-    })
-  });
+  // it('should hash password before save', () => {
+  //   const user = new Accounts({ username: "user1", "services.password.bcrypt": "password"});
+  //   user.save((err, doc) => {
+  //     expect(doc.services.password.bcrypt).toBeDefined();
+  //     expect(doc.services.password.bcrypt).not.toBe("password");
+  //   })
+  // });
 
   describe('Statics', () => {
 
@@ -207,6 +207,17 @@ describe('Accounts', () => {
           expect(e.message).toEqual('User must be set.');
         });
       });
+      it('should reject if password is not set', async () => {
+        const _user = {
+          email: "me_and_i@example.com",
+          username: "me_and_i"
+        };
+        await Accounts.createUser(_user);
+        return Accounts.loginWithPassword("me_and_i", "password")
+        .catch((e) => {
+          expect(e.message).toEqual('Password not set.');
+        })
+      })
       it('should fail if password is not provided', () => {
         return Accounts.loginWithPassword({email: "s"})
         .catch((e) => {
