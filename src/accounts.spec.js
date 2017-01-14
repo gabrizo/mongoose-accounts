@@ -128,13 +128,20 @@ describe('Accounts', () => {
           expect(e.message).toEqual("Emails needs to be greater than one.")
         });
       });
+      it('should reject if email is invalid', async () => {
+        const user = await Accounts.findByUsername("gabrizo");
+        return Accounts.removeEmail(user._id, "invalid_email")
+        .catch((e) =>  {
+          expect(e.message).toEqual('Invalid email address.')
+        });
+      });
       it('should remove emails', async () => {
         const user = await Accounts.findByUsername("gabrizo");
         const email = "email_to_remove@example.com";
         await Accounts.addEmail(user._id, email);
         return Accounts.removeEmail(user._id, email)
-        .then((res) =>  {
-          expect(res).toBeTruthy();
+        .then((removed) =>  {
+          expect(removed).toBeTruthy();
         });
       });
     }); //removeEmail
@@ -152,7 +159,14 @@ describe('Accounts', () => {
           expect(e.message).toEqual("Email must be set.");
         });
       });
-      it('should reject if the userId is not valid', async() => {
+      it('should reject if email is not valid', async () => {
+        const user = await Accounts.findByUsername("gabrizo");
+        return Accounts.addEmail(user._id, 'email_is_invalid')
+        .catch((e) => {
+          expect(e.message).toEqual('Email is not valid.');
+        })
+      });
+      it('should reject if the userId is not found', async() => {
         return Accounts.addEmail("XXXXXXXXXXXX", "me_@example.com")
         .catch((e) => {
           console.log(e.message);
@@ -161,8 +175,8 @@ describe('Accounts', () => {
       })
       it('should add a new mail', async () => {
         const user =  await Accounts.findByUsername("gabrizo");
-        return Accounts.addEmail(user._id, "newEmail@example.com").then((res) => {
-          expect(res).toBeTruthy();
+        return Accounts.addEmail(user._id, "newEmail@example.com").then((added) => {
+          expect(added).toBeTruthy();
         });
       });
       it('should reject if mail already exists', async () => {
