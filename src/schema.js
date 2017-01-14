@@ -13,12 +13,24 @@ export default function (config) {
           type: String,
           select: false,
         }
+      },
+      email: {
+        verificationTokens: [{
+          token: {
+            type: String,
+            unique: true,
+            sparse: true
+          },
+          address: String,
+          createdAt: { type: Date, default: new Date() }
+        }]
       }
     },
     emails: [{
       address: {
         type: String,
         unique: true,
+        sparse: true,
         trim: true,
         lowercase: true,
         index: true

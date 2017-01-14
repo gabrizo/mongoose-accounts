@@ -21,7 +21,7 @@ describe('Accounts', () => {
 
     describe('#createUser()', () => {
       it('should reject if username or email is not provided', async () => {
-        Accounts.createUser({ password: "password" } )
+        return Accounts.createUser({ password: "password" } )
         .catch((e) => {
           expect(e.message).toEqual('Username or email must be set.')
         })
@@ -49,7 +49,7 @@ describe('Accounts', () => {
         });
       });
       it('should create a new user', () => {
-        Accounts.createUser({
+        return Accounts.createUser({
           email: "foo_jane@example.com",
           username: "foobar",
           password: "password123"
@@ -59,7 +59,8 @@ describe('Accounts', () => {
       });
       it('should create a new user and return auth token if autoLogin is set to true', () => {
         const user = { email: "john@example.com",username: "john_doe",password: "password123"};
-        Accounts.createUser(user, true).then((result) => {
+        return Accounts.createUser(user, true)
+        .then((result) => {
           expect(result.userId).toBeDefined();
           expect(result.token).toBeDefined();
         })
@@ -70,14 +71,14 @@ describe('Accounts', () => {
           username: "jane_doe",
           password: "password123"
         };
-        Accounts.createUser(options, true).then((res) => {
+        return Accounts.createUser(options, true).then((res) => {
           expect(res.userId).toBeDefined();
           expect(res.token).toBeDefined();
           expect(res.token).not.toBeNull();
         });
       });
       it('should reject if email is null and EMAIL_IS_REQUIRED is to true', () => {
-        Accounts.createUser({
+        return Accounts.createUser({
           username: "userFoo",
           password: "userPassword221"
         })
@@ -86,7 +87,7 @@ describe('Accounts', () => {
         })
       });
       it('should reject if username is null and USERNAME_IS_REQUIRED is to true', () => {
-        Accounts.createUser({
+        return Accounts.createUser({
           email: "userFoo@example.com",
           password: "userPassword221"
         })
@@ -98,28 +99,31 @@ describe('Accounts', () => {
 
     describe('removeEmail', () => {
       it('should reject is if userId is null', () => {
-        Accounts.removeEmail().catch((e) => expect(e.message).toEqual('userId must be set.'));
-      })
+        return Accounts.removeEmail()
+        .catch((e) => {
+          expect(e.message).toEqual('userId must be set.');
+        });
+      });
       it('should reject if email is not provided', () => {
         Accounts.removeEmail("userId").catch((e) => expect(e.message).toEqual('Email must be set.'));
       });
       it('should reject if the user is does not exist', () => {
         const userId = Types.ObjectId();
-        Accounts.removeEmail(userId, "random@example.com")
+        return Accounts.removeEmail(userId, "random@example.com")
         .catch((e) =>  {
           expect(e.message).toEqual("User not found.");
         });
       });
       it('should reject is no email is not found.', async () => {
         const user = await Accounts.findByUsername("gabrizo");
-        Accounts.removeEmail(user._id, "random_remove_email@example.com")
+        return Accounts.removeEmail(user._id, "random_remove_email@example.com")
         .catch((e) => {
           expect(e.message).toEqual("Email not found.");
         });
       });
       it('should reject if email length is 1', async () => {
         const user = await Accounts.findByUsername("gabrizo");
-        Accounts.removeEmail(user._id, user.emails[0].address)
+        return Accounts.removeEmail(user._id, user.emails[0].address)
         .catch((e) =>  {
           expect(e.message).toEqual("Emails needs to be greater than one.")
         });
@@ -128,7 +132,7 @@ describe('Accounts', () => {
         const user = await Accounts.findByUsername("gabrizo");
         const email = "email_to_remove@example.com";
         await Accounts.addEmail(user._id, email);
-        Accounts.removeEmail(user._id, email)
+        return Accounts.removeEmail(user._id, email)
         .then((res) =>  {
           expect(res).toBeTruthy();
         });
@@ -149,7 +153,7 @@ describe('Accounts', () => {
         });
       });
       it('should reject if the userId is not valid', async() => {
-        Accounts.addEmail("XXXXXXXXXXXX", "me_@example.com")
+        return Accounts.addEmail("XXXXXXXXXXXX", "me_@example.com")
         .catch((e) => {
           console.log(e.message);
           expect(e.message).toEqual("User not found.");
@@ -202,20 +206,20 @@ describe('Accounts', () => {
         });
       });
       it("should fail if the password is in incorrect.",async () => {
-        Accounts.loginWithPassword("gabrizo", "randomPassword")
+        return Accounts.loginWithPassword("gabrizo", "randomPassword")
         .catch((e) => {
           expect(e.message).toEqual('Incorrect password.');
         });
       });
       it("should authenticate with a username.", () => {
-        Accounts.loginWithPassword("gabrizo", 'Password')
+        return Accounts.loginWithPassword("gabrizo", 'Password')
         .then((res) => {
           expect(res.userId).toBeDefined();
           expect(res.token).toBeDefined();
         })
       });
       it("should authenticate with an email.", () => {
-        Accounts.loginWithPassword("gabrizo@example.com", 'Password')
+        return Accounts.loginWithPassword("gabrizo@example.com", 'Password')
         .then((res) => {
           expect(res.userId).toBeDefined();
           expect(res.token).toBeDefined();
@@ -225,21 +229,21 @@ describe('Accounts', () => {
 
     describe("setUsername", () => {
       it('should reject if userId is empty', () => {
-        Accounts.setUsername()
+        return Accounts.setUsername()
         .catch((e) => {
           expect(e.message).toEqual('userId must be set.');
         });
       });
       it('should reject if username is empty', () => {
         const userId = Types.ObjectId()
-        Accounts.setUsername(userId)
+        return Accounts.setUsername(userId)
         .catch((e) => {
           expect(e.message).toEqual('username must be set.');
         });
       });
       it('should reject if user does not exists', () => {
         const userId = Types.ObjectId();
-        Accounts.setUsername(userId, "newUsername")
+        return Accounts.setUsername(userId, "newUsername")
         .catch((e) => {
           expect(e.message).toEqual('User not found.');
         });
@@ -247,7 +251,7 @@ describe('Accounts', () => {
       it('should reject if username is already taken', async () => {
         const user = await Accounts.findByUsername("gabrizo");
         const { _id, username } = user;
-        Accounts.setUsername(_id, username)
+        return Accounts.setUsername(_id, username)
         .catch((e) => {
           expect(e.message).toEqual('Username is already taken.');
         });
@@ -261,18 +265,45 @@ describe('Accounts', () => {
         await Accounts.createUser(_user);
         const user = await Accounts.findByUsername("breezy");
         const { _id, username } = user;
-        Accounts.setUsername(_id, "new_username1020")
+        return Accounts.setUsername(_id, "new_username1020")
         .then((res) => {
           expect(res).toBeTruthy();
         })
       });
     });//setUsername
+
+    describe('getEmailVerificationToken', () => {
+      it('should reject if email is empty.', () => {
+        return Accounts.getEmailVerificationToken()
+        .catch((e) => {
+          expect(e.message).toEqual('Email must be set.')
+        });
+      });
+      it('should reject if email is not valid', () => {
+        return Accounts.getEmailVerificationToken("invalid_email@")
+        .catch(({message}) => {
+          expect(message).toEqual('Invalid email address.');
+        });
+      });
+      it('should fail if email address does not exists', () => {
+        return Accounts.getEmailVerificationToken("someRandomEmail@example.com")
+        .catch(({message}) => {
+          expect(message).toEqual('User not found.');
+        });
+      });
+      it('should return a token', () => {
+        return Accounts.getEmailVerificationToken("gabrizo@example.com")
+        .then((token) => {
+          expect(typeof token).toEqual("string");
+        });
+      });
+    }); //getEmailVerificationToken
   }); //Statics
 
   describe('Methods', () => {
     describe('comparePassword',  async () => {
       it("it should return false if the password is incorrect", async () => {
-        Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec()
+        return Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec()
         .then((user) => {
           user.comparePassword("randomPassword").then((isMatch) => {
             expect(isMatch).toBeFalsy();
@@ -280,7 +311,7 @@ describe('Accounts', () => {
         })
       });
       it("it should return true if the password correct", async () => {
-        Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec()
+        return Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec()
         .then((user) => {
           user.comparePassword("Password").then((isMatch) => {
             expect(isMatch).toBeTruthy();
@@ -292,7 +323,7 @@ describe('Accounts', () => {
       it('should generate a token', async () => {
 
         const user =  await Accounts.findByUsername("gabrizo");
-        user.generateAuthToken()
+        return user.generateAuthToken()
         .then((res) => {
           expect(res.token).toBeDefined();
           expect(res.expiresAt).toBeDefined();

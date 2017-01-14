@@ -1,3 +1,5 @@
+import Chance from 'chance';
+import { forEach } from 'lodash';
 import bcrypt from 'bcrypt';
 import _schema from './schema';
 import defaultConfig from './config'
@@ -24,7 +26,6 @@ export default function (schema, options) {
       })
     })
   });
-
 
   schema.statics = Object.assign(schema.statics, getStatics(options));
   schema.methods = Object.assign(schema.methods, getMethods(options));

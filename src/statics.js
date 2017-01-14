@@ -1,4 +1,8 @@
 import { find } from 'lodash';
+import Chance from 'chance';
+import {  isEmail } from 'validator';
+
+const chance = new Chance();
 
 export default function (config) {
   const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
@@ -101,13 +105,17 @@ export default function (config) {
 
         const query = {_id: userId };
         const emailQuery = { "emails.address": newEmail };
+        const verificationToken = {
+          address: newEmail,
+          token: new Chance(),
+        };
         const update = {
           $addToSet: {
             emails: {
               address: newEmail,
               verified: verified
-            }
-          }
+            },
+          },
         };
 
         User.findOne(emailQuery).exec().then((user) => {
@@ -166,7 +174,35 @@ export default function (config) {
             .then((res) => {
               if(res.nModified > 0) return resolve(true);
               return resolve(false);
-            })
+            });
+          });
+        });
+      });
+    },
+    getEmailVerificationToken: function(email) {
+      const User = this;
+      return new Promise((resolve, reject) => {
+        if(!email) return reject(new Error("Email must be set."));
+        if(!isEmail(email)) return reject(new Error('Invalid email address.'));
+        const findQuery = { "emails.address": email };
+        User.findOne(findQuery).exec().then((user) => {
+          if(!user) return reject(new Error("User not found."));
+          const token = chance.apple_token();
+          const verificationToken = {
+            address: email,
+            token
+          };
+          const updateQuery = { _id: user._id };
+          const push = {
+            $push: {
+              'services.email.verificationTokens': verificationToken
+            }
+          };
+          User.update(updateQuery, push).then((res) => {
+            if(res.nModified >= 1) {
+              return resolve(token);
+            }
+            return resolve(false);
           })
         })
       })
