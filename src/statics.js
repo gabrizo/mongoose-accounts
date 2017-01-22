@@ -201,6 +201,14 @@ export default function (config) {
           })
         })
       })
+    },
+    findUserByQuery: function(query){
+      const User = this;
+      return new Promise((resolve, reject) => {
+        if(!query) return reject( new Error('Query must be set.'));
+        if(typeof query !== 'object') return reject( new Error('Expected an object.'));
+        return resolve(User.findOne(query));
+      })
     }
-  }
-}
+  };
+};

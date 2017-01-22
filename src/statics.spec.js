@@ -304,4 +304,27 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
       });
     });
   }); //getEmailVerificationToken
+
+  describe("findUserByQuery", () => {
+    it('should fail if arg is not of type object', () => {
+      return Accounts.findUserByQuery("string").catch(({message}) => {
+        expect(message).toEqual('Expected an object.');
+      });
+    });
+    it('should fail if arg is empty', () => {
+      return Accounts.findUserByQuery().catch(({message}) => {
+        expect(message).toEqual('Query must be set.');
+      });
+    });
+    it('should return a user if query is valid', () => {
+      return Accounts.findUserByQuery({ username: "maanda" }).then(({username}) => {
+        expect(username).toEqual('maanda');
+      });
+    });
+    it('should return null if user does not exist', () => {
+      return Accounts.findUserByQuery({ username: "maanda23" }).then((user) => {
+        expect(user).toBeNull();
+      });
+    });
+  })
 }); //Statics
