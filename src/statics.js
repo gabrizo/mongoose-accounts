@@ -202,6 +202,13 @@ export default function (config) {
         })
       })
     },
+
+    //findUserByQuery
+    /**
+      * @summary find one user using the given query
+      * @param {Object} query, mandatory object.
+      * @returns {Promise}
+    **/
     findUserByQuery: function(query){
       const User = this;
       return new Promise((resolve, reject) => {
