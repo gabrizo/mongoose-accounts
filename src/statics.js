@@ -1,6 +1,6 @@
 import { find } from 'lodash';
 import Chance from 'chance';
-import {  isEmail } from 'validator';
+import utils from './utils';
 import bcrypt from 'bcrypt';
 const chance = new Chance();
 
@@ -104,7 +104,7 @@ export default function (config) {
       return new Promise((resolve, reject) => {
         if (!userId) return reject((new Error("userId must be set.")));
         if (!newEmail) return reject((new Error("Email must be set.")));
-        if (!isEmail(newEmail)) return reject(new Error("Email is not valid."));
+        if (!utils.isEmail(newEmail)) return reject(new Error("Email is not valid."));
         const query = {_id: userId };
         const emailQuery = { "emails.address": newEmail };
         const verificationToken = {
@@ -128,7 +128,6 @@ export default function (config) {
           if(!user) return reject(new Error("User not found."));
         })
         return resolve(User.update(query, update));
-
       });
     },
     removeEmail: function(userId, address) {
@@ -136,7 +135,7 @@ export default function (config) {
       return new Promise((resolve, reject) => {
         if(!userId) return reject((new Error("userId must be set.")));
         if(!address) return reject((new Error("Email must be set.")));
-        if(!isEmail(address)) return reject(new Error('Invalid email address.'));
+        if(!utils.isEmail(address)) return reject(new Error('Invalid email address.'));
         const emailNotFound = "Email not found.";
         const query = {_id: userId };
         const emailQuery = { "emails.address": address };
@@ -168,8 +167,8 @@ export default function (config) {
           User.findOne({ username }).exec().then((user) => {
             if(user) return reject(new Error("Username is already taken."));
             const query = { _id: userId };
-            const set = { $set: { username: username }};
-            User.update(query, set).exec()
+            const setUsernameQuery = { $set: { username: username }};
+            User.update(query, setUsernameQuery).exec()
             .then(({nModified}) => {
               return resolve(!!nModified);
             });
@@ -181,7 +180,7 @@ export default function (config) {
       const User = this;
       return new Promise((resolve, reject) => {
         if(!email) return reject(new Error("Email must be set."));
-        if(!isEmail(email)) return reject(new Error('Invalid email address.'));
+        if(!utils.isEmail(email)) return reject(new Error('Invalid email address.'));
         const findQuery = { "emails.address": email };
         User.findOne(findQuery).exec().then((user) => {
           if(!user) return reject(new Error("User not found."));

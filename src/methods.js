@@ -1,7 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
-//const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
+import utils from './utils';
 
 export default function (config) {
   return {
@@ -10,15 +9,12 @@ export default function (config) {
         if(this.services.password.bcrypt) {
           return resolve(bcrypt.compareSync(givenPassword, this.services.password.bcrypt));
         }
-
         const fields = { username: 1, 'services.password.bcrypt': 1 };
         this.collection.findOne({_id: this._id}, fields).then((user) => {
           if(user && user.services && user.services.password && user.services.password.bcrypt) {
             return resolve(bcrypt.compareSync(givenPassword, user.services.password.bcrypt));
-
           }
           return reject(new Error('Password not set.'));
-
         });
       });
     },
@@ -42,8 +38,8 @@ export default function (config) {
 
     /**
       * @summary change the current user's password.
-      * @param {String!} oldPassword, the user's current password.
-      * @param {String!} newPassword, the password to be.
+      * @param {String} oldPassword, the user's current password.
+      * @param {String} newPassword, the password to be.
       * @returns {Promise}
     **/
     changePassword: function(oldPassword, newPassword) {
@@ -60,11 +56,12 @@ export default function (config) {
           const update = {
             $set: { "services.password.bcrypt": hash }
           };
-          user.update(update).then((res) => {
-            return resolve(!!res.nModified);
-          });
+          user.services.password.bcrypt = hash;
+          user.save().then((res) => {
+            return resolve(true)
+          })
         });
       });
     },
-  }
-}
+  };
+};
