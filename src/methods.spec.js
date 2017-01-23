@@ -1,5 +1,7 @@
-import { Accounts } from '../test/user';
+import { Accounts, removeAllUsers } from '../test/user';
 const HIDDEN_FIELDS = '+services.password.bcrypt';
+
+removeAllUsers();
 
 let _user;
 
@@ -13,11 +15,6 @@ describe('Methods', () => {
     });
     _user = await Accounts.findOne({username: "gabrizo"}).select(HIDDEN_FIELDS).exec();
   });
-
-  // afterEach( async() => {
-  //   await Accounts.remove({ username: "gabrizo" });
-  // });
-
   describe('#comparePassword(password)',  async () => {
     it("it should return false if the password is incorrect", () => {
       return _user.comparePassword("randomPassword").then((isMatch) => {

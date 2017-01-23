@@ -32,11 +32,8 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
     });
 
     it('should reject if email already exists', async () => {
-      const userObj = { username: "xxxxAsa", password: "sekret", email: "bar_x@example.com" };
-      const userObj2 = { username: "foxAsa", password: "sekret", email: "bar_x@example.com" };
-      const user = await Accounts.createUser(userObj);
-      return Accounts.createUser(userObj2)
-      .catch((e) => {
+      const userObj = { username: "foxAsa", password: "sekret", email: "maanda@example.com" };
+      return Accounts.createUser(userObj).catch((e) => {
         expect(e).toBeDefined();
       })
     });
