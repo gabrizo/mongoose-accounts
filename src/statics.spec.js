@@ -326,5 +326,28 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
         expect(user).toBeNull();
       });
     });
-  })
+  });
+
+  describe('findUserByEmail', () => {
+    it('should reject is email is empty', () => {
+      return Accounts.findUserByEmail().catch(({message}) => {
+        expect(message).toEqual('Email must be set.');
+      });
+    });
+    it('should reject if email is invalid', () => {
+      return Accounts.findUserByEmail("someRandomEmail").catch(({message}) => {
+        expect(message).toEqual('Invalid email address.');
+      });
+    });
+    it('should return null if does not exist', () => {
+      return Accounts.findUserByEmail("someRandomEmail@no.com").catch((user) => {
+        expect(user).toBeNull();
+      });
+    });
+    it('should return a user', () => {
+      return Accounts.findUserByEmail('maanda@example.com').then(({username}) => {
+        expect(username).toEqual(_user.username);
+      });
+    });
+  });
 }); //Statics

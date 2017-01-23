@@ -216,6 +216,22 @@ export default function (config) {
         if(typeof query !== 'object') return reject( new Error('Expected an object.'));
         return resolve(User.findOne(query));
       })
+    },
+
+    //findUserByEmail
+    /**
+      * @summary find one user using the given query
+      * @param {String} email, mandatory object.
+      * @returns {Promise}
+    **/
+    findUserByEmail: function(email){
+      const User = this;
+      return new Promise((resolve, reject) => {
+        if(!email) return reject( new Error('Email must be set.'));
+        if(!utils.isEmail(email)) return reject( new Error('Invalid email address.'));
+        const query = { "emails.address": email };
+        return resolve(User.findUserByQuery(query));
+      })
     }
   };
 };
