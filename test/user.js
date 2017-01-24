@@ -1,18 +1,18 @@
 import mongoose, { Schema } from 'mongoose';
 import AccountsPlugin from '../src/index.js';
-// import { setupTest } from './mongoose-connection';
+import { setupTest } from './mongoose-connection';
 
 mongoose.connect('mongodb://localhost/mongoose-accounts');
 mongoose.Promise = global.Promise;
 
-// setupTest();
+setupTest();
 const UserSchema = new Schema({
   firstName: String
 });
 
 UserSchema.plugin(AccountsPlugin, {
   EMAIL_IS_REQUIRED: true,
-  USERNAME_IS_REQUIRED: true,
+  USERNAME_IS_REQUIRED: false,
   // AUTO_LOGIN: true
 });
 

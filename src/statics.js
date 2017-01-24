@@ -7,47 +7,55 @@ const chance = new Chance();
 export default function (config) {
   const SELECT_HIDDEN_FIELDS = '+services.password.bcrypt';
   return {
-    createUser: function(options, autoLogin = config.AUTO_LOGIN) {
+
+    //createUser
+    /**
+      * @summary create a user.
+      * @param {Object} args, mandatory object, username or email must be set.
+      * @param {Object} options, override schema configuration.
+      * @returns {Promise}
+    **/
+    createUser: function(args, options = {}) {
       const User = this;
       return new Promise((resolve, reject) => {
-        if(typeof options !== "object") {
+        if(typeof args !== "object") {
           return reject(new Error("Expected an object."));
         }
-
-        const email = options.email;
-        const username = options.username;
-        const password = options.password;
+        const email = args.email;
+        const username = args.username;
+        const password = args.password;
+        const autoLogin = options.autoLogin || config.AUTO_LOGIN;
+        let emailIsRequired = config.EMAIL_IS_REQUIRED;
+        let usernameIsRequired = config.USERNAME_IS_REQUIRED;
 
         if(!username && !email) {
           return reject(new Error('Username or email must be set.'));
         }
-
-        if(!username && config.USERNAME_IS_REQUIRED) {
+        if(typeof options.emailIsRequired === 'boolean') {
+          emailIsRequired = options.emailIsRequired;
+        }
+        if(typeof options.usernameIsRequired === 'boolean') {
+          usernameIsRequired = options.usernameIsRequired;
+        }
+        if(!username && usernameIsRequired) {
           return reject(new Error("Username is required."));
         }
-
-        if(!email && config.EMAIL_IS_REQUIRED) {
+        if (!email && emailIsRequired) {
           return reject(new Error("Email address is required."));
         }
-
         const user = { services: {} };
-
-        if(email) {
-          User.findOne({ "emails.address": email }, (err, doc) => {
-            if(err) return reject(err);
+        if(!!email) {
+          User.findUserByEmail(email).then((doc) => {
             if(doc) return reject(new Error("Email is already taken."));
-          })
+          });
           user.emails = [{ address: email, verified: false} ];
         }
-
-        if(username) {
-          User.findOne({ "username": username }, (err, doc) => {
-            if(err) return reject(err);
+        if(!!username) {
+          User.findUserByUsername(username).then((doc) => {
             if(doc) return reject(new Error("Username is already taken."));
           })
           user.username = username
         }
-
         if(password) {
           user.services.password = { bcrypt: bcrypt.hashSync(password, config.bcryptRounds)};
         }
@@ -59,16 +67,21 @@ export default function (config) {
         });
       })
     },
-    findByUsername: function (username) {
-      const User = this;
-      return new Promise((resolve, reject) => {
-        const query = { username: `${username}` };
-        User.findOne(query, (err, doc) => {
-          if(err) return reject(err);
-          return resolve(doc);
-        })
-      })
+    //findUserByUsername
+    /**
+      * @summary takes a username and returns a user.
+      * @param {String} username, username to query.
+      * @return {Promise}
+    **/
+    findUserByUsername: function (username) {
+      return Promise.resolve(this.findUserByQuery({ username }));
     },
+    //loginWithPassword
+    /**
+      * @summary Login with password.
+      * @param {Object} selector, email, username or a query to find the user.
+      * @param { String} password, plain text password to verify against the database.
+    **/
     loginWithPassword: function(selector, password) {
       const User = this;
       return new Promise((resolve, reject) => {
@@ -99,6 +112,13 @@ export default function (config) {
         });
       });
     },
+    //addEmail
+    /**
+      * @summary remove an email address from a user document.
+      * @param {String} userId, _id of the user.
+      * @param {String} newEmail, email address to add.
+      * @param {Boolean} verified, should the new address be marked as verified, defaults to false.
+    **/
     addEmail: function(userId, newEmail, verified = false) {
       const User = this;
       return new Promise((resolve, reject) => {
@@ -130,6 +150,13 @@ export default function (config) {
         return resolve(User.update(query, update));
       });
     },
+    //removeEmail
+    /**
+      * @summary remove an email address from a user document.
+      * @param {String} userId, _id of the user.
+      * @param {String} address, email address to remove.
+      * @return {Promise}
+    **/
     removeEmail: function(userId, address) {
       const User = this;
       return new Promise((resolve, reject) => {
@@ -147,7 +174,6 @@ export default function (config) {
         User.findOne(query).exec().then((user) => {
           if(!user) return reject(new Error("User not found."));
           const { emails } = user;
-          if(!emails) return reject(new Error(emailNotFound));
           const email = find(emails, { address: address } );
           if(!email) return reject(new Error(emailNotFound));
           if(emails.length <= 1) return reject(Error("Emails needs to be greater than one."));
@@ -157,6 +183,13 @@ export default function (config) {
         });
       });
     },
+    //setUsername
+    /**
+      * @summary set a username
+      * @param {String} userId, the collection _id to set the username
+      * @param {String} username, the actual username to apply;
+      * @return {Promise}
+    **/
     setUsername: function(userId, username) {
       const User = this;
       return new Promise((resolve, reject) => {
@@ -176,6 +209,12 @@ export default function (config) {
         });
       });
     },
+    //getEmailVerificationToken
+    /**
+      * @summary generates an email verification token
+      * @param {String} email.
+      * @returns {Promise}
+    **/
     getEmailVerificationToken: function(email) {
       const User = this;
       return new Promise((resolve, reject) => {
@@ -195,14 +234,12 @@ export default function (config) {
               'services.email.verificationTokens': verificationToken
             }
           };
-          User.update(updateQuery, push).then(({nModified}) => {
-            const result = !!nModified ? token : null;
-            return resolve(result);
-          })
-        })
-      })
+          User.update(updateQuery, push).then(() => {
+            return resolve(token)
+          });
+        });
+      });
     },
-
     //findUserByQuery
     /**
       * @summary find one user using the given query
@@ -217,7 +254,6 @@ export default function (config) {
         return resolve(User.findOne(query));
       })
     },
-
     //findUserByEmail
     /**
       * @summary find one user using the given query

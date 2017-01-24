@@ -19,18 +19,15 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
 
   describe('#createUser()', () => {
     it('should reject if username or email is not provided', async () => {
-      return Accounts.createUser({ password: "password" } )
-      .catch((e) => {
+      return Accounts.createUser({ password: "password" }).catch((e) => {
         expect(e.message).toEqual('Username or email must be set.')
       })
     });
     it('should only accept an object as args', () => {
-      return Accounts.createUser("foo_bar@example.com")
-      .catch((e) => {
-        expect(e.message).toEqual("Expected an object.");
+    return Accounts.createUser("foo_bar@example.com").catch(({message}) => {
+        expect(message).toEqual("Expected an object.");
       })
     });
-
     it('should reject if email already exists', async () => {
       const userObj = { username: "foxAsa", password: "sekret", email: "maanda@example.com" };
       return Accounts.createUser(userObj).catch((e) => {
@@ -38,7 +35,7 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
       })
     });
     it('should reject if username already exists', async () => {
-      const userObj = { password: "sekret", username: "gabrizo", email: "user3@example.com" };
+      const userObj = { password: "sekret", username: "maanda", email: "user3@example.com" };
       return Accounts.createUser(userObj)
       .catch((e) => {
         expect(e).toBeDefined();
@@ -55,41 +52,69 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
     });
     it('should create a new user and return auth token if autoLogin is set to true', () => {
       const user = { email: "john@example.com",username: "john_doe",password: "password123"};
-      return Accounts.createUser(user, true)
+      return Accounts.createUser(user, { autoLogin: true})
       .then((result) => {
         expect(result.userId).toBeDefined();
         expect(result.token).toBeDefined();
       })
     });
     it('should create a new user and generateAuthToken if AUTO_LOGIN is set to true', () => {
-      const options = {
+      const args = {
         email: "jane_doe@example.com",
         username: "jane_doe",
         password: "password123"
       };
-      return Accounts.createUser(options, true).then((res) => {
+      return Accounts.createUser(args, { autoLogin: true}).then((res) => {
         expect(res.userId).toBeDefined();
         expect(res.token).toBeDefined();
         expect(res.token).not.toBeNull();
       });
     });
+    it('should create without an email address', () => {
+      const args = { username: "john_doe", password: "password123" };
+      const options = { emailIsRequired: false, autoLogin: true };
+      return Accounts.createUser(args, options).then((res) => {
+        expect(res.userId).toBeDefined();
+        expect(res.token).toBeDefined();
+        expect(res.token).not.toBeNull();
+      });
+    });
+    it('should create without an email address', () => {
+      const args = { email: "john_doe@domain.com", password: "password123" };
+      const options = { usernameIsRequired: false, autoLogin: true };
+      return Accounts.createUser(args, options).then((res) => {
+        expect(res.userId).toBeDefined();
+        expect(res.token).toBeDefined();
+        expect(res.token).not.toBeNull();
+      });
+    });
+    it('should reject if username is required.', () => {
+      const args = { email: "john_doe@domain.net", password: "password123" };
+      const options = { usernameIsRequired: true, autoLogin: true };
+      return Accounts.createUser(args, options).catch(({message}) => {
+        expect(message).toEqual('Username is required.');
+      });
+    });
+    it('should fail is email is undefined and emailIsRequired is true', () => {
+      const args = { username: "jane_doe", password: "password123" };
+      const options = { emailIsRequired: true, autoLogin: true };
+      return Accounts.createUser(args, options).catch(({message}) => {
+        expect(message).toEqual('Email address is required.');
+      });
+    });
     it('should reject if email is null and EMAIL_IS_REQUIRED is to true', () => {
-      return Accounts.createUser({
-        username: "userFoo",
-        password: "userPassword221"
-      })
-      .catch((e) => {
+      const args = { username: "userFoo", password: "userPassword221" };
+      const options = { emailIsRequired: true };
+      return Accounts.createUser(args, options) .catch((e) => {
         expect(e.message).toEqual("Email address is required.")
       })
     });
     it('should reject if username is null and USERNAME_IS_REQUIRED is to true', () => {
-      return Accounts.createUser({
-        email: "userFoo@example.com",
-        password: "userPassword221"
-      })
-      .catch((e) => {
+      const args = { email: "userFoo@example.com", password: "userPassword221" };
+      const options = { usernameIsRequired: true };
+      return Accounts.createUser(args, options).catch((e) => {
         expect(e.message).toEqual("Username is required.")
-      })
+      });
     })
   }); //createUser
 
@@ -172,13 +197,13 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
     });
   });
 
-  describe('findByUsername',() => {
+  describe('findUserByUsername',() => {
     it('should return a user', async () => {
-      const user = await Accounts.findByUsername("maanda");
+      const user = await Accounts.findUserByUsername("maanda");
       expect(user.username).toEqual("maanda");
     });
     it('should return null if the username is not found',() => {
-      Accounts.findByUsername({ username: "does_not_exit"}).then((user) => {
+      Accounts.findUserByUsername({ username: "does_not_exit"}).then((user) => {
         expect(user).toBeNull();
       });
     });
@@ -218,18 +243,24 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
       });
     });
     it("should authenticate with a username.", () => {
-      return Accounts.loginWithPassword("maanda", 'Password')
-      .then((res) => {
+      return Accounts.loginWithPassword("maanda", 'Password').then((res) => {
         expect(res.userId).toBeDefined();
         expect(res.token).toBeDefined();
-      })
+      });
+    });
+    it('it should authenticate if selector is valid', () => {
+      const selector = { _id: _user._id };
+      return Accounts.loginWithPassword(selector, 'Password').then((res) => {
+        expect(res.userId).toBeDefined();
+        expect(res.token).toBeDefined();
+      });
     });
     it("should authenticate with an email.", () => {
       return Accounts.loginWithPassword("maanda@example.com", 'Password')
       .then((res) => {
         expect(res.userId).toBeDefined();
         expect(res.token).toBeDefined();
-      })
+      });
     });
   });
 
@@ -267,7 +298,7 @@ const HIDDEN_FIELDS = '+services.password.bcrypt';
         password: "PAssswprd"
       };
       await Accounts.createUser(_user);
-      const user = await Accounts.findByUsername("breezy");
+      const user = await Accounts.findUserByUsername("breezy");
       const { _id, username } = user;
       return Accounts.setUsername(_id, "new_username1020")
       .then((res) => {
