@@ -83,7 +83,7 @@
     "bcrypt": "1.0.2",
     "chance": "1.0.4",
     "jsonwebtoken": "7.2.1",
-    "lodash": "4.17.4",
+    "lodash": "4.17.5",
     "mongoose-unique-validator": "1.0.3",
     "validator": "6.2.1"
   }
